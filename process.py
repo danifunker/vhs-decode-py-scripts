@@ -32,7 +32,7 @@ def getFileList(fileType,directory):
     return files
 
 def getFilenamePrefix(fileName):
-    position=fileName.find("-rf-video-40msps")
+    position=fileName.find("-rf-video-")
     prefix=fileName[0:position]
     return prefix
 
@@ -75,13 +75,14 @@ def doesu8Exist(associatedFiles):
 
 ###Execution functions
 
-def LaunchVHSDecode(associatedFiles,format):
+def LaunchVHSDecode(selectedFile,format):
     #Need the prefix
-    for file in associatedFiles:
-        if file.find("-rf-video-40msps.flac") or file.find("-rf-video-40msps.u8"):
-            videoFile=file
-    prefix=getFilenamePrefix(file)
-    run(f"vhs-decode --ntsc --threads 16 --tape_format {format} --cxadc {videoFile} {prefix}-video",shell=True)
+    # for file in associatedFiles:
+    #     if file.find("-rf-video-40msps.flac") or file.find("-rf-video-40msps.u8"):
+    #         videoFile=file
+    #         break
+    prefix=getFilenamePrefix(selectedFile)
+    run(f"vhs-decode --ntsc --threads 16 --tape_format {format} --cxadc {selectedFile} {prefix}-video",shell=True)
     pass
 
 def launchLDAnalyze(associatedFiles):
@@ -131,7 +132,7 @@ def launchtbcVideoExport(associatedFiles):
         run(f"tbc-video-export --audio-track {alignedWavFile} {tbcfile}", shell=True)
 
 def launchFlacEncoder():
-    run("find . -iname '*.u8' -exec flac --best --sample-rate=40000 --sign=unsigned --channels=1 --endian=little --bps=8 {} \;")
+    run("find . -iname '*.u8' -exec flac --best --sample-rate=40000 --sign=unsigned --channels=1 --endian=little --bps=8 {} \;", shell=True)
 
 def cleanupFiles(associatedFiles, prefix):
     #Does FLAC exist? If so, delete u8
@@ -165,7 +166,7 @@ def renameSourceFiles(associatedFiles, prefix):
     return selectedFile
 
 def showFileList():
-    if len(getFileList("*.u8", directory)) == 0:
+    if len(getFileList(".u8", directory)) == 0:
         print("All Files are already converted to FLAC in this folder")
         return(getFileList(".flac", directory))
     else:
@@ -182,9 +183,9 @@ while option != 0:
         case 1: 
             launchFlacEncoder()
         case 2: 
-            LaunchVHSDecode(associatedFiles,"VIDEO8")
+            LaunchVHSDecode(selectedFile,"VIDEO8")
         case 3: 
-            LaunchVHSDecode(associatedFiles,"VHS")
+            LaunchVHSDecode(selectedFile,"VHS")
         case 4: 
             launchLDAnalyze(associatedFiles)
         case 5: 
