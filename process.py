@@ -15,6 +15,7 @@ def mainMenu(selectedFile, associatedFileNames):
     print(f"[7] Rename Source Files")
     print(f"[8] Cleanup files after export, including .u8 if FLAC exists ")
     print(f"[9] Select a different file")
+    print(f"[10] Open MKV file {doesMKVExist(associatedFileNames)}")
     print(f"[0] Exit the Program")
 
 def fileMenu(fileList):
@@ -29,7 +30,8 @@ def getFileList(fileType,directory):
     for x in os.listdir(directory):
         if x.endswith(fileType):
             files.append(x)
-    return files
+    files_sorted=sorted(files)
+    return files_sorted
 
 def getFilenamePrefix(fileName):
     position=fileName.find("-rf-video-")
@@ -82,8 +84,7 @@ def LaunchVHSDecode(selectedFile,format):
     #         videoFile=file
     #         break
     prefix=getFilenamePrefix(selectedFile)
-    run(f"vhs-decode --ntsc --threads 16 --tape_format {format} --cxadc {selectedFile} {prefix}-video",shell=True)
-    pass
+    run(f"vhs-decode --ntsc --tape_speed sp --threads 8 --tape_format {format} --recheck_phase -f 40 {selectedFile} {prefix}-video",shell=True)
 
 def launchLDAnalyze(associatedFiles):
     for file in associatedFiles:
@@ -93,6 +94,16 @@ def launchLDAnalyze(associatedFiles):
         run(f"ld-analyse {tbcfile}", shell=True)
     else:
         print("Could not find a tbc.json file. Please run vhs-decode first")
+
+def launchPlayer(associatedFiles):
+    for file in associatedFiles:
+        if file.endswith(".mkv"):
+            mkvFile=file
+    if 'mkvFile' in locals():
+        run(f"open {mkvFile}", shell=True)
+    else:
+        print("Could not find an mkv file. Please run Export to MKV first.")
+    return associatedFiles
 
 def launchVhsAutoAlign(associatedFiles):
     for file in associatedFiles:
@@ -166,7 +177,7 @@ def renameSourceFiles(associatedFiles, prefix):
     return selectedFile
 
 def showFileList():
-    if len(getFileList(".u8", directory)) == 0:
+    if len(getFileList(".u8", directory)) == 0 or (len(getFileList(".flac", directory)) == len(getFileList(".u8", directory))):
         print("All Files are already converted to FLAC in this folder")
         return(getFileList(".flac", directory))
     else:
@@ -198,6 +209,8 @@ while option != 0:
             cleanupFiles(associatedFiles,prefix)
         case 9: 
             selectedFile=fileMenu(showFileList())
+        case 10: 
+            launchPlayer(associatedFiles)
         case _:
             print("\x1b[31mInvalid Option selected\x1b[39m")
     #Wait for user input so they can review previous output
